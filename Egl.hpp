@@ -51,6 +51,9 @@
 #include <EGL/eglext.h>
 #endif
 
+#include "WindowSystem/WindowEvent.hpp"
+#include "GLEngine_src/Khr_src/Egl_src/EglWindowSystem.hpp"
+
 /// EGL_CreateWindow flag - RGB color buffer
 #define EGL_FLAG_FRAMEBUFFER_RGB           0
 /// EGL_CreateWindow flag - ALPHA color buffer
@@ -64,16 +67,28 @@
 
 class Egl
 {
-   public:
-      bool CreateSurfaceAndBindContext(EGLNativeDisplayType display, EGLNativeWindowType window, GLuint flags);
-      void swapBuffers();
+    public:
+        bool CreateSurfaceAndBindContext(const char *title, int posx, int posy, int width, int height, GLuint flags);
+        void swapBuffers();
 
-   private:
-      EGLDisplay  eglDisplay;
+        void getEvent(WindowEvent *event) const;
 
-      EGLContext  eglContext;
+    private:
+        bool attachToNativeDisplay();
+        bool createNativeWindow(const char *title, int posx, int posy, int width, int height);
+        bool initEglOnDisplay();
+        bool getFramebufferConfig(GLuint flags);
+        bool createSurface();
+        bool createContext();
+        bool bindContextToSurface();
 
-      EGLSurface eglSurface;
+        WindowSystem windowSystem;
+        EGLConfig config;
+        EGLint majorVersion;
+        EGLint minorVersion;
+        EGLDisplay display;
+        EGLContext context;
+        EGLSurface surface;
 };
 
 #endif // EGL_H
