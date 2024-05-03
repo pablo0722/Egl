@@ -29,66 +29,52 @@
 // URLs:      http://www.opengles-book.com
 //            http://my.safaribooksonline.com/book/animation-and-3d/9780133440133
 //
+// winsystem.h
 //
-/// \file ESUtil.h
-/// \brief A utility library for OpenGL ES.  This library provides a
-///        basic common framework for the example applications in the
-///        OpenGL ES 3.0 Programming Guide.
-//
-#ifndef EGL_H
-#define EGL_H
+//   API-neutral interface for creating windows.  Implementation needs to be provided per-platform.
 
-///
-//  Includes
-//
-#include <stdlib.h>
+#ifndef EGLWINSYSTEM_H
+#define EGLWINSYSTEM_H
 
-#ifdef __APPLE__
-#include <OpenGLES/ES3/gl.h>
-#else
-#include <GLES3/gl3.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#endif
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+
+#include <EGL/eglplatform.h>
 
 #include "WindowSystem/WindowEvent.hpp"
-#include "GLEngine/Khr/Egl/EglWindowSystem.hpp"
 
-/// EGL_CreateWindow flag - RGB color buffer
-#define EGL_FLAG_FRAMEBUFFER_RGB           0
-/// EGL_CreateWindow flag - ALPHA color buffer
-#define EGL_FLAG_FRAMEBUFFER_ALPHA         1
-/// EGL_CreateWindow flag - depth buffer
-#define EGL_FLAG_FRAMEBUFFER_DEPTH         2
-/// EGL_CreateWindow flag - stencil buffer
-#define EGL_FLAG_FRAMEBUFFER_STENCIL       4
-/// EGL_CreateWindow flat - multi-sample buffer
-#define EGL_FLAG_FRAMEBUFFER_MULTISAMPLE   8
+#define EGL_USE_LINUX
 
-class Egl
-{
+#ifdef EGL_USE_ANDROID
+#include "WindowSystem/WindowSystemAndroid.hpp"
+typedef WindowSystemAndroid WindowSystemNative;
+#endif
+
+#ifdef EGL_USE_LINUX
+#include "WindowSystem/WindowSystemLinux.hpp"
+typedef WindowSystemLinux WindowSystemNative;
+#endif
+
+#ifdef EGL_USE_WINDOWS
+#include "WindowSystem/WindowSystemWindows.hpp"
+typedef WindowSystemWindows WindowSystemNative;
+#endif
+
+
+class EglWindowSystem {
     public:
-        bool CreateSurfaceAndBindContext(const char *title, int posx, int posy, int width, int height, GLuint flags);
-        void swapBuffers();
+        void attachToNativeDisplay();
+        void createNativeWindow(const char *title, int posx, int posy, int width, int height);
 
         void getEvent(WindowEvent *event) const;
+        EGLNativeDisplayType getNativeDisplay() const;
+        EGLNativeWindowType getNativeWindow() const;
 
     private:
-        bool attachToNativeDisplay();
-        bool createNativeWindow(const char *title, int posx, int posy, int width, int height);
-        bool initEglOnDisplay();
-        bool getFramebufferConfig(GLuint flags);
-        bool createSurface();
-        bool createContext();
-        bool bindContextToSurface();
-
-        EglWindowSystem windowSystem;
-        EGLConfig config;
-        EGLint majorVersion;
-        EGLint minorVersion;
-        EGLDisplay display;
-        EGLContext context;
-        EGLSurface surface;
+        EGLNativeDisplayType display = NULL;
+        EGLNativeWindowType window;
+        WindowSystemNative windowSystem;
 };
 
-#endif // EGL_H
+#endif // EGLWINSYSTEM_H
